@@ -29,7 +29,7 @@ A list with the following components
 }
 \details{
 A first estimator of the link function, neglecting the assumption of monotonicity, is obtained with function \code{\link[locpol]{locpol}} from the \emph{locpol} package.
-The final estimator is obtained through the rearrangement operation explained in Chernozhukov et al (2009). This operation is carried out with function \code{\link[Rearrangement]{rearrangement}} from package \code{Rearrangement}.
+The final estimator is obtained through the rearrangement operation explained in Chernozhukov et al (2009). This operation is carried out with function \code{\link[Rearrangement]{rearrangement}} from package \emph{Rearrangement}.
 }
 \section{References}{
 
@@ -38,10 +38,10 @@ Chernozhukov, V., I. Fernández-Val, and A. Galichon (2009). Improving Point and
 
 \examples{
 data(Data.Incomes)
-PLR <- Lorenz.Reg(Income ~ ., data = Data.Incomes, penalty = "SCAD",
-                  h.grid = nrow(Data.Incomes)^(-1/5.5), eps = 0.01)
-Y <- PLR$Fit[,1]
-Index <- PLR$Fit[,2]
+PLR <- Lorenz.Reg(Income ~ ., data = Data.Incomes,
+                  penalty = "SCAD", eps = 0.01)
+Y <- PLR$y
+Index <- predict(PLR)
 Rearrangement.estimation(Y = Y, Index = Index)
 
 }

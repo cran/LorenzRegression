@@ -1,31 +1,36 @@
-#' Printing method for the Lorenz Regression
+#' Printing method for the Lorenz regression
 #'
-#' \code{print.LR} prints the arguments and estimated coefficients of an object of class \code{LR}.
+#' Prints the arguments, explained Gini coefficient and estimated coefficients of an object of class \code{"LR"}.
 #'
-#' @param x Output of a call to \code{\link{Lorenz.Reg}}, where \code{penalty="none"}.
+#' @aliases print.LR_boot
+#' @param x An object of class \code{"LR"}.
+#' @param digits The number of significant digits to be passed.
 #' @param ... Additional arguments.
 #'
-#' @return No return value, called for printing an object of class \code{LR} to the console
+#' @return No return value, called for printing an object of class \code{"LR"} to the console.
 #'
 #' @seealso \code{\link{Lorenz.Reg}}
 #'
 #' @examples
-#' data(Data.Incomes)
-#' NPLR <- Lorenz.Reg(Income ~ ., data = Data.Incomes, penalty = "none")
-#' print(NPLR)
-#'
-#' @import knitr
+#' ## For examples see example(Lorenz.Reg)
 #'
 #' @method print LR
 #' @export
 
-print.LR <- function(x, ...){
+print.LR <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
 
-  cat("Call",
-      x$call,
-      sep="\n",
-      "",
-      "Coefficients",
-      knitr::kable(x$theta))
+  cat("\nCall:\n", paste(deparse(x$call), sep = "\n", collapse = "\n"),
+      "\n\n", sep = "")
+  cat("Explained Gini coefficient:", sprintf(paste0("%.", digits, "f"), ineqExplained.LR(x)), "\n")
+  cat("\nCoefficients:\n")
+  print.default(format(coef.LR(x), digits = digits), print.gap = 2L,
+                quote = FALSE, ...)
 
+}
+
+#' @method print LR_boot
+#' @export
+
+print.LR_boot <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
+  NextMethod("print")
 }

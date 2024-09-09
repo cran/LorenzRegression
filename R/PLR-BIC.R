@@ -3,7 +3,8 @@
 #' \code{PLR.BIC} takes as input a matrix of estimated parameter vectors, where each row corresponds to a covariate and each column corresponds to a value of lambda,
 #' and returns the index of the optimal column by optimizing an information criterion. By default the BIC is used.
 #'
-#' @param YX_mat A matrix with the first column corresponding to the response vector, the remaining ones being the explanatory variables.
+#' @param y a vector of responses
+#' @param x a matrix of explanatory variables
 #' @param theta matrix gathering the path of estimated parameter vectors. Each row corresponds to a given covariate. Each column corresponds to a given value of lambda
 #' @param weights vector of sample weights. By default, each observation is given the same weight.
 #' @param IC indicates which information criterion is used. Possibles values are "BIC" (default) or "AIC".
@@ -14,27 +15,19 @@
 #'    \item{\code{best}}{index of the value of lambda where the optimum is attained.}
 #' }
 #'
-#' @seealso \code{\link{Lorenz.Reg}}, \code{\link{PLR.wrap}}, \code{\link{Lorenz.FABS}}, \code{\link{Lorenz.SCADFABS}}
+#' @seealso \code{\link{Lorenz.Reg}}, \code{\link{Lorenz.FABS}}, \code{\link{Lorenz.SCADFABS}}
 #'
 #' @section References:
-#' Jacquemain, A., C. Heuchenne, and E. Pircalabelu (2022). A penalised bootstrap estimation procedure for the explained Gini coefficient.
+#' Jacquemain, A., C. Heuchenne, and E. Pircalabelu (2024). A penalised bootstrap estimation procedure for the explained Gini coefficient. \emph{Electronic Journal of Statistics 18(1) 247-300}.
 #'
-#' @examples
-#' data(Data.Incomes)
-#' YX_mat <- Data.Incomes[,-2]
-#' PLR <- PLR.wrap(YX_mat, h = nrow(YX_mat)^(-1/5.5), eps = 0.005)
-#' PLR.BIC(YX_mat, PLR$theta)
-#'
-#' @export
+#' @keywords internal
 
-PLR.BIC <- function(YX_mat, theta, weights=NULL, IC=c("BIC","AIC")){
+PLR.BIC <- function(y, x, theta, weights=NULL, IC=c("BIC","AIC")){
 
   IC <- match.arg(IC)
 
-  y <- YX_mat[,1]
   n <- length(y)
-  X <- YX_mat[,-1]
-  Index <- as.matrix(X)%*%theta
+  Index <- x%*%theta
 
   score <- log(apply(Index, 2, function(t) Gini.coef(y, x=t, na.rm=TRUE, ties.method="mean", weights=weights)))
 

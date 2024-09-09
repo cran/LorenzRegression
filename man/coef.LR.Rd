@@ -2,12 +2,13 @@
 % Please edit documentation in R/LR-coef.R
 \name{coef.LR}
 \alias{coef.LR}
-\title{Estimated coefficients for the Lorenz Regression}
+\alias{coef.LR_boot}
+\title{Estimated coefficients for the Lorenz regression}
 \usage{
 \method{coef}{LR}(object, ...)
 }
 \arguments{
-\item{object}{Output of a call to \code{\link{Lorenz.Reg}}, where \code{penalty="none"}.}
+\item{object}{An object of S3 class \code{"LR"}.}
 
 \item{...}{Additional arguments.}
 }
@@ -15,12 +16,10 @@
 a vector gathering the estimated coefficients
 }
 \description{
-\code{coef.LR} provides the estimated coefficients for an object of class \code{LR}.
+Provides the estimated coefficients for an object of class \code{"LR"}.
 }
 \examples{
-data(Data.Incomes)
-NPLR <- Lorenz.Reg(Income ~ ., data = Data.Incomes, penalty = "none")
-coef(NPLR)
+## For examples see example(Lorenz.Reg)
 
 }
 \seealso{

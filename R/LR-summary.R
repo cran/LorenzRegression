@@ -1,45 +1,83 @@
-#' Summary for the Lorenz Regression
+#' Summary for the Lorenz regression
 #'
-#' \code{summary.LR} provides a summary for an object of class \code{LR}.
+#' Provides a summary for an object of class \code{"LR"}.
 #'
-#' @param object Output of a call to \code{\link{Lorenz.Reg}}, where \code{penalty=="none"}.
-#' @param ... Additional arguments
+#' @aliases summary.LR_boot
+#' @param object An object of class \code{"LR"}. The object might also have S3 class \code{"LR_boot"} (which inherits from class \code{"PLR"}).
+#' @param ... Additional arguments.
 #'
-#' @return A summary displaying the explained Gini coefficient, Lorenz-\eqn{R^2} and a table gathering the estimated coefficients, including p-values if bootstrap was performed.
+#' @return An object of class \code{"summary.LR"}, containing the following elements:
+#' \describe{
+#'    \item{\code{call}}{The matched call.}
+#'    \item{\code{ineq}}{A matrix with one row and three columns providing information on explained inequality. The first column gives the explained Gini coefficient, the second column gives the Gini coefficient of the response. The third column gives the Lorenz-\eqn{R^2}.}
+#'    \item{\code{coefficients}}{A matrix providing information on the estimated coefficients. The first column gives the estimates.
+#'    If \code{object} inherits from \code{"LR_boot"}, bootstrap inference was performed and the matrix contains further information. The second column is the boostrap standard error. The third column is the z-value. Finally, the last column is the p-value.
+#'    In this case, the class \code{"summary.LR_boot"} is added to the output.}
+#' }
 #'
-#' @seealso \code{\link{Lorenz.Reg}}
+#' @details
+#' The inference provided in the \code{coefficients} matrix is obtained by using the asymptotic normality and estimating the asymptotic variance via bootstrap.
+#'
+#' @seealso \code{\link{Lorenz.Reg}}, \code{\link{Lorenz.boot}}
 #'
 #' @examples
-#' data(Data.Incomes)
-#' NPLR <- Lorenz.Reg(Income ~ ., data = Data.Incomes, penalty = "none")
-#' summary(NPLR)
-#'
-#' @import knitr
+#' ## For examples see example(Lorenz.Reg) and example(Lorenz.boot)
 #'
 #' @method summary LR
 #' @export
 
 summary.LR <- function(object, ...){
 
-  LR <- object
-  theta.mat <- as.matrix(LR$theta)
-  if ("pval.theta" %in% names(LR)){
-    theta.mat <- cbind(theta.mat, LR$pval.theta)
-    txt <- "Estimated coefficients and associated p-values"
-    colnames(theta.mat) <- c("estimate","p-value")
+  ans <- list()
+  ans$call <- object$call
+
+  if(length(all.vars(object$terms))>1){
+
+    ans$ineq <- matrix(c(ineqExplained.LR(object,type="Gini.explained"),
+                         ineqExplained.LR(object,type="Gini.explained")/ineqExplained.LR(object,type="Lorenz-R2"),
+                         ineqExplained.LR(object,type="Lorenz-R2")),
+                       nrow = 1, ncol = 3,
+                       dimnames = list("", c("Explained","Total","Lorenz-R2")))
+    ans$coefficients <- as.matrix(coef.LR(object))
+    colnames(ans$coefficients) <- "Estimate"
+
   }else{
-    txt <- "Estimated coefficients"
-    colnames(theta.mat) <- c("estimate")
+
+    ans$ineq <- NULL
+    ans$coefficients <- NULL
+
   }
 
-  theta.table <- knitr::kable(theta.mat)
+  class(ans) <- "summary.LR"
 
-  cat(paste0("The explained Gini coefficient is of ",round(LR$Gi.expl,5)),
-            "",
-            paste0("The Lorenz-R2 is of ",round(LR$LR2,5)),
-            "",
-            txt,
-            theta.table,
-            sep = "\n")
+  return(ans)
+
+}
+
+#' @method summary LR_boot
+#' @export
+
+summary.LR_boot <- function(object, ...){
+
+  ans <- NextMethod("summary")
+
+  if(length(all.vars(object$terms))>1){
+    n <- nrow(object$x)
+    p <- ncol(object$x)
+    theta.boot <- object$boot_out$t[,3:ncol(object$boot_out$t)]
+    Sigma.star <- n*stats::var(theta.boot)
+    c.std <- sqrt(diag(Sigma.star)/n)
+    ans$coefficients <- cbind(ans$coefficients, c.std)
+    c.z <- coef.LR(object)/c.std
+    ans$coefficients <- cbind(ans$coefficients, c.z)
+    c.p <- sapply(1:p,function(k)2*stats::pnorm(abs(c.z[k]),lower.tail=FALSE))
+    ans$coefficients <- cbind(ans$coefficients, c.p)
+    colnames(ans$coefficients) <- c("Estimate", "Std. Error", "z value", "Pr(>|z|)")
+
+    class(ans) <- c("summary.LR_boot",class(ans))
+
+  }
+
+  return(ans)
 
 }

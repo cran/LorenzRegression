@@ -2,31 +2,36 @@
 % Please edit documentation in R/PLR-summary.R
 \name{summary.PLR}
 \alias{summary.PLR}
-\title{Summary for the Penalized Lorenz Regression}
+\alias{summary.PLR_boot}
+\alias{summary.PLR_cv}
+\title{Summary for the penalized Lorenz regression}
 \usage{
 \method{summary}{PLR}(object, renormalize = TRUE, ...)
 }
 \arguments{
-\item{object}{Output of a call to \code{\link{Lorenz.Reg}}, where \code{penalty!="none"}.}
+\item{object}{An object of class \code{"PLR"}. The object might also have S3 classes \code{"PLR_boot"} and/or \code{"PLR_cv"} (both inherit from class \code{"PLR"})}
 
-\item{renormalize}{whether the coefficient vector should be re-normalized to match the representation where the first category of each categorical variable is omitted. Default value is TRUE}
+\item{renormalize}{A logical value determining whether the coefficient vector should be re-normalized to match the representation where the first category of each categorical variable is omitted. Default value is TRUE}
 
-\item{...}{Additional arguments.}
+\item{...}{Additional arguments}
 }
 \value{
-A summary displaying two tables: a summary of the model and the estimated coefficients.
+An object of class \code{"summary.PLR"}, which contains:
+\describe{
+   \item{\code{call}}{The matched call.}
+   \item{\code{ineq}}{A table of explained inequality metrics. The columns display the explained Gini coefficient, the Gini coefficient of the response, and the Lorenz-R2. The first row contains the results obtained by BIC.}
+   \item{\code{coefficients}}{A matrix with estimated coefficients, each row corresponding to a specific coefficient. The first column contains the results obtained by BIC.}
+}
+If the object inherits from \code{"PLR_boot"}, \code{ineq} and \code{coefficients} also include results from bootstrap, and the class \code{"summary.PLR_boot"} is added to the output.
+Similarly, if the object inherits from \code{"PLR_cv"}, \code{ineq} and \code{coefficients} also include results from cross-validation, and the class \code{"summary.PLR_cv"} is added to the output.
 }
 \description{
-\code{summary.PLR} provides a summary for an object of class \code{PLR}.
+Provides a summary for an object of class \code{"PLR"}.
 }
 \examples{
-data(Data.Incomes)
-PLR <- Lorenz.Reg(Income ~ ., data = Data.Incomes, penalty = "SCAD",
-                  sel.choice = c("BIC","CV"), h.grid = nrow(Data.Incomes)^(-1/5.5),
-                  eps = 0.01, seed.CV = 123, nfolds = 5)
-summary(PLR)
+## For examples see example(Lorenz.Reg), example(Lorenz.boot) and example(PLR.CV)
 
 }
 \seealso{
-\code{\link{Lorenz.Reg}}
+\code{\link{Lorenz.Reg}}, \code{\link{Lorenz.boot}}, \code{\link{PLR.CV}}
 }

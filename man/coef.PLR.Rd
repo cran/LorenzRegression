@@ -2,30 +2,35 @@
 % Please edit documentation in R/PLR-coef.R
 \name{coef.PLR}
 \alias{coef.PLR}
-\title{Estimated coefficients for the Penalized Lorenz Regression}
+\alias{coef.PLR_boot}
+\alias{coef.PLR_cv}
+\title{Estimated coefficients for the penalized Lorenz regression}
 \usage{
-\method{coef}{PLR}(object, renormalize = TRUE, ...)
+\method{coef}{PLR}(object, renormalize = TRUE, pars.idx = "BIC", ...)
 }
 \arguments{
-\item{object}{Output of a call to \code{\link{Lorenz.Reg}}, where \code{penalty!="none"}.}
+\item{object}{An object of S3 class \code{"PLR"}. The object might also have S3 classes \code{"PLR_boot"} and/or \code{"PLR_cv"} (both inherit from class \code{"PLR"})}
 
-\item{renormalize}{whether the coefficient vector should be re-normalized to match the representation where the first category of each categorical variable is omitted. Default value is TRUE}
+\item{renormalize}{A logical value determining whether the coefficient vector should be re-normalized to match the representation where the first category of each categorical variable is omitted. Default value is TRUE}
+
+\item{pars.idx}{What grid and penalty parameters should be used for parameter selection. Either a character string specifying the selection method, where the possible values are:
+\itemize{
+   \item \code{"BIC"} (default) - Always available.
+   \item \code{"Boot"} - Available if \code{object} inherits from \code{"PLR_boot"}.
+   \item \code{"CV"} - Available if \code{object} inherits from \code{"PLR_cv"}.
+}
+Or a numeric vector of length 2, where the first element is the index of the grid parameter and the second is the index of the penalty parameter.}
 
 \item{...}{Additional arguments}
 }
 \value{
-If the PLR was fitted with only one selection method, the output is a vector gathering the estimated coefficients.
-If several selection methods were selected, it outputs a list of vectors, where each element of the list corresponds to a different selection method.
+a vector gathering the estimated coefficients.
 }
 \description{
-\code{coef.PLR} provides the estimated coefficients for an object of class \code{PLR}.
+Provides the estimated coefficients for an object of class \code{"PLR"}.
 }
 \examples{
-data(Data.Incomes)
-PLR <- Lorenz.Reg(Income ~ ., data = Data.Incomes, penalty = "SCAD",
-                  h.grid = nrow(Data.Incomes)^(-1/5.5), sel.choice = c("BIC","CV"),
-                  eps = 0.01, seed.CV = 123, nfolds = 5)
-coef(PLR)
+## For examples see example(Lorenz.Reg), example(Lorenz.boot) and example(PLR.CV)
 
 }
 \seealso{

@@ -4,10 +4,12 @@
 \alias{PLR.BIC}
 \title{Determines the regularization parameter (lambda) in a PLR via optimization of an information criterion.}
 \usage{
-PLR.BIC(YX_mat, theta, weights = NULL, IC = c("BIC", "AIC"))
+PLR.BIC(y, x, theta, weights = NULL, IC = c("BIC", "AIC"))
 }
 \arguments{
-\item{YX_mat}{A matrix with the first column corresponding to the response vector, the remaining ones being the explanatory variables.}
+\item{y}{a vector of responses}
+
+\item{x}{a matrix of explanatory variables}
 
 \item{theta}{matrix gathering the path of estimated parameter vectors. Each row corresponds to a given covariate. Each column corresponds to a given value of lambda}
 
@@ -28,16 +30,10 @@ and returns the index of the optimal column by optimizing an information criteri
 }
 \section{References}{
 
-Jacquemain, A., C. Heuchenne, and E. Pircalabelu (2022). A penalised bootstrap estimation procedure for the explained Gini coefficient.
+Jacquemain, A., C. Heuchenne, and E. Pircalabelu (2024). A penalised bootstrap estimation procedure for the explained Gini coefficient. \emph{Electronic Journal of Statistics 18(1) 247-300}.
 }
 
-\examples{
-data(Data.Incomes)
-YX_mat <- Data.Incomes[,-2]
-PLR <- PLR.wrap(YX_mat, h = nrow(YX_mat)^(-1/5.5), eps = 0.005)
-PLR.BIC(YX_mat, PLR$theta)
-
-}
 \seealso{
-\code{\link{Lorenz.Reg}}, \code{\link{PLR.wrap}}, \code{\link{Lorenz.FABS}}, \code{\link{Lorenz.SCADFABS}}
+\code{\link{Lorenz.Reg}}, \code{\link{Lorenz.FABS}}, \code{\link{Lorenz.SCADFABS}}
 }
+\keyword{internal}

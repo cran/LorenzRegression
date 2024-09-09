@@ -1,29 +1,59 @@
-#' Plots for the Unpenalized Lorenz Regression
+#' Plots for the Lorenz regression
 #'
-#' \code{plot.LR} provides plots for an object of class \code{LR}.
+#' \code{autoplot} generates a plot for an object of class \code{"LR"} and returns it as a \code{ggplot} object.
+#' The \code{plot} method is a wrapper around \code{autoplot} that directly displays the plot,
+#' providing a more familiar interface for users accustomed to base R plotting.
 #'
-#' @param x Output of a call to \code{\link{Lorenz.Reg}}, where \code{penalty=="none"}.
-#' @param ... Additional arguments
+#' @aliases plot.LR autoplot.LR_boot plot.LR_boot
+#' @param x An object of class \code{"LR"}.
+#' @param object An object of class \code{"LR"}.
+#' @param ... Additional arguments passed to \code{\link{Lorenz.graphs}}.
 #'
-#' @return The Lorenz curve of the response and concentration curve of the response with respect to the estimated index
+#' @return \code{autoplot} returns a \code{ggplot} object representing the Lorenz curve of the response and the concentration curve of the response with respect to the estimated index. \code{plot} directly displays this plot.
 #'
 #' @seealso \code{\link{Lorenz.Reg}}
 #'
 #' @examples
-#' data(Data.Incomes)
-#' NPLR <- Lorenz.Reg(Income ~ ., data = Data.Incomes, penalty = "none")
-#' plot(NPLR)
+#' ## For examples see example(Lorenz.Reg)
 #'
-#' @import ggplot2
+#' @importFrom ggplot2 ggtitle autoplot
+#' @importFrom stats update.formula
 #'
-#' @method plot LR
+#' @method autoplot LR
 #' @export
 
-plot.LR <- function(x, ...){
+autoplot.LR <- function(object, ...){
 
-  p0 <- Lorenz.graphs(Response ~ ., x$Fit, weights = x$weights)
-  p0 <- p0 + ggtitle("Observed and explained inequality")
+  if (is.null(object$theta)) stop("No plots are available for an empty model.")
 
-  p0
+  formula <- update.formula(object, . ~ index)
+  data <- data.frame(object$y,predict.LR(object))
+  names(data) <- all.vars(formula)
+
+  g <- Lorenz.graphs(formula, data, weights = object$weights, ...)
+  g <- g + ggtitle("Observed and explained inequality")
+
+  g
 
 }
+
+#' @importFrom graphics plot
+#' @method plot LR
+#' @rdname autoplot.LR
+#' @export
+plot.LR <- function(x, ...) {
+  print(autoplot(x, ...))
+}
+
+#' @method autoplot LR_boot
+#' @export
+autoplot.LR_boot <- function(object, ...){
+  NextMethod("autoplot")
+}
+
+#' @method plot LR_boot
+#' @export
+plot.LR_boot <- function(x, ...) {
+  print(autoplot(x, ...))
+}
+

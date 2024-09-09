@@ -2,84 +2,88 @@
 % Please edit documentation in R/Lorenz-bootstrap.R
 \name{Lorenz.boot}
 \alias{Lorenz.boot}
-\title{Produces bootstrap-based inference for (penalized) Lorenz regression}
+\title{Bootstrap for the (penalized) Lorenz regression}
 \usage{
-Lorenz.boot(
-  formula,
-  data,
-  standardize = TRUE,
-  weights = NULL,
-  LR.est = NULL,
-  penalty = c("none", "SCAD", "LASSO"),
-  h = NULL,
-  eps = 0.005,
-  B = 500,
-  bootID = NULL,
-  seed.boot = NULL,
-  parallel = FALSE,
-  ...
-)
+Lorenz.boot(object, R, data.orig, boot_out_only = FALSE, ...)
 }
 \arguments{
-\item{formula}{A formula object of the form \emph{response} ~ \emph{other_variables}.}
+\item{object}{An object with S3 class \code{"LR"} or \code{"PLR"}, i.e. the return of a call to the \code{\link{Lorenz.Reg}} function.}
 
-\item{data}{A data frame containing the variables displayed in the formula.}
+\item{R}{An integer indicating the number of bootstrap replicates.}
 
-\item{standardize}{Should the variables be standardized before the estimation process? Default value is TRUE.}
+\item{data.orig}{A data frame corresponding to the original dataset, used in the \code{\link{Lorenz.Reg}} call.}
 
-\item{weights}{vector of sample weights. By default, each observation is given the same weight.}
+\item{boot_out_only}{A logical determining whether the function should return raw bootstrap results. This is an advanced feature that helps save computation time in certain instances. See Details.}
 
-\item{LR.est}{Estimation on the original sample. Output of a call to \code{\link{Lorenz.GA}} or \code{\link{PLR.wrap}}.}
-
-\item{penalty}{should the regression include a penalty on the coefficients size.
-If "none" is chosen, a non-penalized Lorenz regression is computed using function \code{\link{Lorenz.GA}}.
-If "SCAD" is chosen, a penalized Lorenz regression with SCAD penalty is computed using function \code{\link{Lorenz.SCADFABS}}.
-IF "LASSO" is chosen, a penalized Lorenz regression with LASSO penalty is computed using function \code{\link{Lorenz.FABS}}.}
-
-\item{h}{Only used if penalty="SCAD" or penalty="LASSO". Bandwidth of the kernel, determining the smoothness of the approximation of the indicator function. Default value is NULL (unpenalized case) but has to be specified if penalty="LASSO" or penalty="SCAD".}
-
-\item{eps}{Only used if penalty="SCAD" or penalty="LASSO". Step size in the FABS or SCADFABS algorithm. Default value is 0.005.}
-
-\item{B}{Number of bootstrap resamples. Default is 500.}
-
-\item{bootID}{matrix where each row provides the ID of the observations selected in each bootstrap resample. Default is NULL, in which case these are defined internally.}
-
-\item{seed.boot}{Should a specific seed be used in the definition of the folds. Default value is NULL in which case no seed is imposed.}
-
-\item{parallel}{Whether parallel computing should be used to distribute the \code{B} computations on different CPUs. Either a logical value determining whether parallel computing is used (TRUE) or not (FALSE, the default value). Or a numerical value determining the number of cores to use.}
-
-\item{...}{Additional parameters corresponding to arguments passed in \code{\link{Lorenz.GA}}, \code{\link{Lorenz.SCADFABS}} or \code{\link{Lorenz.FABS}} depending on the argument chosen in penalty.}
+\item{...}{Additional parameters corresponding to arguments passed to the function \code{\link[boot]{boot}} from the \emph{boot} library.}
 }
 \value{
-A list with several components:
+An object of class \code{c("LR_boot", "LR")} or \code{c("PLR_boot", "PLR")}, depending on whether a non-penalized or penalized regression was fitted.
+
+The methods \code{\link{confint.LR}} and \code{\link{confint.PLR}} are used on objects of class \code{"LR_boot"} or \code{"PLR_boot"} to construct confidence intervals for the model parameters.
+
+For the non-penalized Lorenz regression, the returned object is a list containing the following components:
 \describe{
-   \item{\code{LR.est}}{Estimation on the original sample.}
-   \item{\code{Gi.star}}{In the unpenalized case, a vector gathering the bootstrap estimators of the explained Gini coefficient. In the penalized case, it becomes a list of vectors. Each element of the list corresponds to a different value of the penalization parameter}
-   \item{\code{LR2.star}}{In the unpenalized case, a vector gathering the bootstrap estimators of the Lorenz-\eqn{R^2}. In the penalized case, it becomes a list of vectors.}
-   \item{\code{theta.star}}{In the unpenalized case, a matrix gathering the bootstrap estimators of theta (rows correspond to bootstrap iterations and columns refer to the different coefficients). In the penalized case, it becomes a list of matrices.}
-   \item{\code{OOB.total}}{In the penalized case only. Vector gathering the OOB-score for each lambda value.}
-   \item{\code{OOB.best}}{In the penalized case only. index of the lambda value attaining the highest OOB-score.}
+   \item{\code{theta}}{The estimated vector of parameters. In the penalized case, it is a matrix where each row corresponds to a different selection method (e.g., BIC, bootstrap, cross-validation).}
+   \item{\code{Gi.expl}}{The estimated explained Gini coefficient. In the penalized case, it is a vector, where each element corresponds to a different selection method.}
+   \item{\code{LR2}}{The Lorenz-\eqn{R^2} of the regression. In the penalized case, it is a vector, where each element corresponds to a different selection method.}
+   \item{\code{boot_out}}{An object of class \code{"boot"} containing the output of the bootstrap calculation.}
 }
+For the penalized Lorenz regression, the returned object is a list containing the following components:
+\describe{
+   \item{\code{path}}{See \code{\link{Lorenz.Reg}} for the original path. To this path is added the out-of-bag (OOB) score.}
+   \item{\code{lambda.idx}}{A vector indicating the index of the optimal lambda obtained by each selection method.}
+   \item{\code{grid.idx}}{A vector indicating the index of the optimal grid parameter obtained by each selection method.}
+}
+Note: in the penalized case, the returned object may have additional classes such as \code{"PLR_cv"} if cross-validation was performed and used as a selection method.
 }
 \description{
-\code{Lorenz.boot} determines bootstrap estimators for the weight vector, explained Gini coefficient and Lorenz-\eqn{R^2} and, if applies, selects the regularization parameter.
+\code{Lorenz.boot} determines bootstrap estimators for the vector of coefficients of the single-index model, explained Gini coefficient and Lorenz-\eqn{R^2}. In the penalized case, it also provides a selection method.
+}
+\details{
+Users that want to perform parallel computing have two options. The first and most obvious option is to use the facilities provided by the function \code{\link[boot]{boot}}.
+Indeed, arguments such as \code{parallel}, \code{ncpus} and \code{cl} can be passed through the \code{...}.
+Alternatively, users might want to run different instances of the function, each taking care of a portion of the bootstrap samples.
+The argument \code{boot_out_only} can be set to \code{TRUE} to avoid unnecessary computations. If so, the returned object does not inherit from the class \code{"LR_boot"} or \code{"PLR_boot"}. The function simply returns the original \code{object}, to which is added the \code{boot_out} object.
+If this second option is chosen, the instances have to be combined using the function \code{\link{Lorenz.boot.combine}}.
 }
 \section{References}{
 
 Heuchenne, C. and A. Jacquemain (2022). Inference for monotone single-index conditional means: A Lorenz regression approach. \emph{Computational Statistics & Data Analysis 167(C)}.
-Jacquemain, A., C. Heuchenne, and E. Pircalabelu (2022). A penalised bootstrap estimation procedure for the explained Gini coefficient.
+
+Jacquemain, A., C. Heuchenne, and E. Pircalabelu (2024). A penalised bootstrap estimation procedure for the explained Gini coefficient. \emph{Electronic Journal of Statistics 18(1) 247-300}.
 }
 
 \examples{
-data(Data.Incomes)
+\dontshow{
+utils::example(Lorenz.Reg, echo = FALSE)
+}
+# Continuing the Lorenz.Reg(.) example for the non-penalized regression:
+# This example is not run as it takes > 5 seconds to run.
+\dontrun{
 set.seed(123)
-Data <- Data.Incomes[sample(1:nrow(Data.Incomes),50),]
-Lorenz.boot(Income ~ ., data = Data,
-            penalty = "SCAD", h = nrow(Data)^(-1/5.5),
-            eps = 0.02, B = 40, seed.boot = 123)
-
+NPLR_boot <- Lorenz.boot(NPLR, R = 30, data.orig = data)
+# The method confint() is available to objects of class "LR_boot".
+confint(NPLR_boot)
+summary(NPLR_boot)
+}
+# Continuing the Lorenz.Reg(.) example for the penalized regression:
+set.seed(123)
+PLR_boot <- Lorenz.boot(PLR, R = 30, data.orig = data)
+# The object now inherits from the class "PLR_boot"
+# Hence the methods (also) display the results obtained by bootstrap.
+print(PLR_boot)
+summary(PLR_boot)
+coef(PLR_boot, pars.idx = "Boot")
+predict(PLR_boot, pars.idx = "Boot")
+plot(PLR_boot)
+# Plot of the scores for each selection method depending on the grid and penalty parameters
+plot(PLR_boot, type = "diagnostic")
+# The method confint() is available to objects of class "PLR_boot".
+confint(PLR_boot, pars.idx = "BIC") # Using the tuning parameters selected by BIC
+confint(PLR_boot, pars.idx = "Boot") # Using the tuning parameters selected by bootstrap
 
 }
 \seealso{
-\code{\link{Lorenz.Reg}}, \code{\link{Lorenz.GA}}, \code{\link{Lorenz.SCADFABS}}, \code{\link{Lorenz.FABS}}, \code{\link{PLR.wrap}}
+\code{\link{Lorenz.Reg}}, \code{\link{Lorenz.GA}}, \code{\link{Lorenz.SCADFABS}}, \code{\link{Lorenz.FABS}}, \code{\link{PLR.CV}}, \code{\link[boot]{boot}}
 }

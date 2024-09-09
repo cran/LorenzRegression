@@ -2,54 +2,60 @@
 % Please edit documentation in R/FABS-estimation.R
 \name{Lorenz.FABS}
 \alias{Lorenz.FABS}
-\title{Solves the Penalized Lorenz Regression with Lasso penalty}
+\title{Estimates the parameter vector in a penalized Lorenz regression with lasso penalty}
 \usage{
 Lorenz.FABS(
-  YX_mat,
+  y,
+  x,
+  standardize = TRUE,
   weights = NULL,
-  h,
-  w.adaptive = NULL,
-  eps,
-  iter = 10^4,
+  kernel = 1,
+  h = length(y)^(-1/5.5),
+  gamma = 0.05,
   lambda = "Shi",
-  lambda.min = 1e-07,
-  gamma = 0.05
+  w.adaptive = NULL,
+  eps = 0.005,
+  iter = 10^4,
+  lambda.min = 1e-07
 )
 }
 \arguments{
-\item{YX_mat}{a matrix with the first column corresponding to the response vector, the remaining ones being the explanatory variables.}
+\item{y}{a vector of responses}
+
+\item{x}{a matrix of explanatory variables}
+
+\item{standardize}{Should the variables be standardized before the estimation process? Default value is TRUE.}
 
 \item{weights}{vector of sample weights. By default, each observation is given the same weight.}
 
-\item{h}{bandwidth of the kernel, determining the smoothness of the approximation of the indicator function.}
+\item{kernel}{integer indicating what kernel function to use. The value 1 is the default and implies the use of an Epanechnikov kernel while the value of 2 implies the use of a biweight kernel.}
 
-\item{w.adaptive}{vector of size equal to the number of covariates where each entry indicates the weight in the adaptive Lasso. By default, each covariate is given the same weight (Lasso).}
+\item{h}{bandwidth of the kernel, determining the smoothness of the approximation of the indicator function. Default value is n^(-1/5.5) where n is the sample size.}
 
-\item{eps}{step size in the FABS algorithm.}
-
-\item{iter}{maximum number of iterations. Default value is 10^4.}
+\item{gamma}{value of the Lagrange multiplier in the loss function}
 
 \item{lambda}{this parameter relates to the regularization parameter. Several options are available.
 \describe{
-    \item{\code{grid}}{If lambda="grid", lambda is defined on a grid, equidistant in the logarithmic scale.}
-    \item{\code{Shi}}{If lambda="Shi", lambda, is defined within the algorithm, as in Shi et al (2018).}
+    \item{\code{grid}}{If \code{lambda="grid"}, lambda is defined on a grid, equidistant in the logarithmic scale.}
+    \item{\code{Shi}}{If \code{lambda="Shi"}, lambda, is defined within the algorithm, as in Shi et al (2018).}
     \item{\code{supplied}}{If the user wants to supply the lambda vector himself}
 }}
 
-\item{lambda.min}{lower bound of the penalty parameter. Only used if lambda="Shi".}
+\item{w.adaptive}{vector of size equal to the number of covariates where each entry indicates the weight in the adaptive Lasso. By default, each covariate is given the same weight (Lasso).}
 
-\item{gamma}{value of the Lagrange multiplier in the loss function}
+\item{eps}{step size in the FABS algorithm. Default value is 0.005.}
+
+\item{iter}{maximum number of iterations. Default value is 10^4.}
+
+\item{lambda.min}{lower bound of the penalty parameter. Only used if \code{lambda="Shi"}.}
 }
 \value{
 A list with several components:
 \describe{
-   \item{\code{iter}}{number of iterations attained by the algorithm.}
-   \item{\code{direction}}{vector providing the direction (-1 = backward step, 1 = forward step) for each iteration.}
-   \item{\code{lambda}}{value of the regularization parameter for each iteration.}
-   \item{\code{h}}{value of the bandwidth.}
-   \item{\code{theta}}{matrix where column i provides the estimated parameter vector for iteration i.}
-   \item{\code{LR2}}{the Lorenz-\eqn{R^2} of the regression.}
-   \item{\code{Gi.expl}}{the estimated explained Gini coefficient.}
+   \item{\code{lambda}}{vector gathering the different values of the regularization parameter}
+   \item{\code{theta}}{matrix where column i provides the vector of estimated coefficients corresponding to the value \code{lambda[i]} of the regularization parameter.}
+   \item{\code{LR2}}{vector where element i provides the Lorenz-\eqn{R^2} attached to the value \code{lambda[i]} of the regularization parameter.}
+   \item{\code{Gi.expl}}{vector where element i provides the estimated explained Gini coefficient related to the value \code{lambda[i]} of the regularization parameter.}
 }
 }
 \description{
@@ -63,16 +69,18 @@ In order to ensure identifiability, theta is forced to have a L2-norm equal to o
 }
 \section{References}{
 
-Jacquemain, A., C. Heuchenne, and E. Pircalabelu (2022). A penalised bootstrap estimation procedure for the explained Gini coefficient.
+Jacquemain, A., C. Heuchenne, and E. Pircalabelu (2024). A penalised bootstrap estimation procedure for the explained Gini coefficient. \emph{Electronic Journal of Statistics 18(1) 247-300}.
+
 Shi, X., Y. Huang, J. Huang, and S. Ma (2018). A Forward and Backward Stagewise Algorithm for Nonconvex Loss Function with Adaptive Lasso, \emph{Computational Statistics & Data Analysis 124}, 235-251.
 }
 
 \examples{
 data(Data.Incomes)
-YX_mat <- Data.Incomes[,-2]
-Lorenz.FABS(YX_mat, h = nrow(Data.Incomes)^(-1/5.5), eps = 0.005)
+y <- Data.Incomes[,1]
+x <- as.matrix(Data.Incomes[,-c(1,2)])
+Lorenz.FABS(y, x)
 
 }
 \seealso{
-\code{\link{Lorenz.Reg}}, \code{\link{PLR.wrap}}, \code{\link{Lorenz.SCADFABS}}
+\code{\link{Lorenz.Reg}}, \code{\link{Lorenz.SCADFABS}}
 }

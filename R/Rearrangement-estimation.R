@@ -3,7 +3,7 @@
 #' \code{Rearrangement.estimation} estimates the increasing link function of a single index model via the methodology proposed in Chernozhukov et al (2009).
 #'
 #' A first estimator of the link function, neglecting the assumption of monotonicity, is obtained with function \code{\link[locpol]{locpol}} from the \emph{locpol} package.
-#' The final estimator is obtained through the rearrangement operation explained in Chernozhukov et al (2009). This operation is carried out with function \code{\link[Rearrangement]{rearrangement}} from package \code{Rearrangement}.
+#' The final estimator is obtained through the rearrangement operation explained in Chernozhukov et al (2009). This operation is carried out with function \code{\link[Rearrangement]{rearrangement}} from package \emph{Rearrangement}.
 #'
 #' @param Y The response variable.
 #' @param Index The estimated index. The user may obtain it using function \code{\link{Lorenz.Reg}}.
@@ -24,10 +24,10 @@
 #'
 #' @examples
 #' data(Data.Incomes)
-#' PLR <- Lorenz.Reg(Income ~ ., data = Data.Incomes, penalty = "SCAD",
-#'                   h.grid = nrow(Data.Incomes)^(-1/5.5), eps = 0.01)
-#' Y <- PLR$Fit[,1]
-#' Index <- PLR$Fit[,2]
+#' PLR <- Lorenz.Reg(Income ~ ., data = Data.Incomes,
+#'                   penalty = "SCAD", eps = 0.01)
+#' Y <- PLR$y
+#' Index <- predict(PLR)
 #' Rearrangement.estimation(Y = Y, Index = Index)
 #'
 #' @import Rearrangement

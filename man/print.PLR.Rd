@@ -2,27 +2,30 @@
 % Please edit documentation in R/PLR-print.R
 \name{print.PLR}
 \alias{print.PLR}
-\title{Printing method for the Penalized Lorenz Regression}
+\alias{print.PLR_boot}
+\alias{print.PLR_cv}
+\title{Printing method for the penalized Lorenz regression}
 \usage{
-\method{print}{PLR}(x, ...)
+\method{print}{PLR}(x, digits = max(3L, getOption("digits") - 3L), ...)
 }
 \arguments{
-\item{x}{Output of a call to \code{\link{Lorenz.Reg}}, where \code{penalty!="none"}.}
+\item{x}{An object of S3 class \code{"PLR"}. The object might also have S3 classes \code{"PLR_boot"} and/or \code{"PLR_cv"} (both inherit from class \code{"PLR"})}
+
+\item{digits}{The number of significant digits to be passed.}
 
 \item{...}{Additional arguments.}
 }
 \value{
-No return value, called for printing an object of class \code{PLR} to the console
+No return value, called for printing an object of class \code{"PLR"} to the console.
 }
 \description{
-\code{print.PLR} prints the arguments and estimated coefficients of an object of class \code{PLR}.
+Prints the arguments, explained Gini coefficient and estimated coefficients of an object of class \code{"PLR"}.
+}
+\details{
+The explained Gini coefficient and estimated coefficients are returned for each available selection method, depending on the class of \code{x}.
 }
 \examples{
-data(Data.Incomes)
-PLR <- Lorenz.Reg(Income ~ ., data = Data.Incomes, penalty = "SCAD",
-                  sel.choice = c("BIC","CV"), h.grid = nrow(Data.Incomes)^(-1/5.5),
-                  eps = 0.01, seed.CV = 123, nfolds = 5)
-print(PLR)
+## For examples see example(Lorenz.Reg), example(Lorenz.boot) and example(PLR.CV)
 
 }
 \seealso{

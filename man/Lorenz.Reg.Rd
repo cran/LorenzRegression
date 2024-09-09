@@ -2,129 +2,113 @@
 % Please edit documentation in R/Lorenz-regression.R
 \name{Lorenz.Reg}
 \alias{Lorenz.Reg}
-\title{Undertakes a Lorenz regression}
+\title{Fits a Lorenz regression}
 \usage{
 Lorenz.Reg(
   formula,
   data,
-  standardize = TRUE,
-  weights = NULL,
-  parallel = FALSE,
+  weights,
+  na.action,
   penalty = c("none", "SCAD", "LASSO"),
-  h.grid = c(0.1, 0.2, 1, 2, 5) * nrow(data)^(-1/5.5),
-  eps = 0.005,
-  sel.choice = c("BIC", "CV", "Boot")[1],
-  nfolds = 10,
-  seed.CV = NULL,
-  foldID = NULL,
-  Boot.inference = FALSE,
-  B = 500,
-  bootID = NULL,
-  seed.boot = NULL,
-  LR = NULL,
-  LR.boot = NULL,
+  grid.arg = c("h", "SCAD.nfwd", "eps", "kernel", "a", "gamma"),
+  grid.value = NULL,
+  lambda.list = NULL,
   ...
 )
 }
 \arguments{
-\item{formula}{A formula object of the form \emph{response} ~ \emph{other_variables}.}
+\item{formula}{An object of class "\code{\link{formula}}" (or one that can be coerced to that class): a symbolic description of the model to be fitted.}
 
-\item{data}{A data frame containing the variables displayed in the formula.}
+\item{data}{An optional data frame, list or environment (or object coercible by \code{\link{as.data.frame}} to a data frame) containing the variables in the model. If not found in \code{data}, the variables are taken from \code{environment(formula)}, typically the environment from which \code{Lorenz.Reg} is called.}
 
-\item{standardize}{Should the variables be standardized before the estimation process? Default value is TRUE.}
+\item{weights}{An optional vector of sample weights to be used in the fitting process. Should be \code{NULL} or a numeric vector.}
 
-\item{weights}{vector of sample weights. By default, each observation is given the same weight.}
+\item{na.action}{A function which indicates what should happen when the data contain \code{NA}s. The default is set by the \code{na.action} setting of \code{\link{options}}, and is \code{\link{na.fail}} if that is unset. The 'factory-fresh' default is \code{\link{na.omit}}. Another possible value is \code{NULL}, no action. Value \code{\link{na.exclude}} can be useful.}
 
-\item{parallel}{Whether parallel computing should be used to distribute the computations on different CPUs. Either a logical value determining whether parallel computing is used (TRUE) or not (FALSE, the default value). Or a numerical value determining the number of cores to use.}
+\item{penalty}{A character string specifying the type of penalty on the size of the estimated coefficients of the single-index model.
+The default value is \code{"none"}, in which case a non-penalized Lorenz regression is fitted using \code{\link{Lorenz.GA}}.
+Other possible values are \code{"LASSO"} and \code{"SCAD"}, in which case a penalized Lorenz regression is fitted using \code{\link{Lorenz.FABS}} or \code{\link{Lorenz.SCADFABS}} respectively.}
 
-\item{penalty}{should the regression include a penalty on the coefficients size.
-If "none" is chosen, a non-penalized Lorenz regression is computed using function \code{\link{Lorenz.GA}}.
-If "SCAD" is chosen, a penalized Lorenz regression with SCAD penalty is computed using function \code{\link{Lorenz.SCADFABS}}.
-IF "LASSO" is chosen, a penalized Lorenz regression with LASSO penalty is computed using function \code{\link{Lorenz.FABS}}.}
+\item{grid.arg}{A character string specifying the tuning parameter for which a grid is to be constructed, see Details.}
 
-\item{h.grid}{Only used if penalty="SCAD" or penalty="LASSO". Grid of values for the bandwidth of the kernel, determining the smoothness of the approximation of the indicator function. Default value is (0.1,0.2,1,2,5)*n^(-1/5.5), where n is sample size.}
+\item{grid.value}{A numeric vector specifying the grid values, see Details.}
 
-\item{eps}{Only used if penalty="SCAD" or penalty="LASSO". Step size in the FABS or SCADFABS algorithm. Default value is 0.005.}
+\item{lambda.list}{Technical argument used inside the function \code{\link{Lorenz.boot}}.}
 
-\item{sel.choice}{Only used if penalty="SCAD" or penalty="LASSO". Determines what method is used to determine the optimal regularization parameter. Possibles values are any subvector of c("BIC","CV","Boot"). Default is "BIC". Notice that "Boot" is necessarily added if Boot.inference is set to TRUE.}
-
-\item{nfolds}{Only used if sel.choice contains "CV". Number of folds in the cross-validation.}
-
-\item{seed.CV}{Only used if sel.choice contains "CV". Should a specific seed be used in the definition of the folds. Default value is NULL in which case no seed is imposed.}
-
-\item{foldID}{vector taking value from 1 to nfolds specifying the fold index of each observation. Default value is NULL in which case the folds are defined internally.}
-
-\item{Boot.inference}{should bootstrap inference be produced ? Default is FALSE. It is automatically turned to TRUE if sel.choice contains "Boot".}
-
-\item{B}{Only used if Boot.inference is TRUE. Number of bootstrap resamples. Default is 500.}
-
-\item{bootID}{Only used if Boot.inference is TRUE. matrix where each row provides the ID of the observations selected in each bootstrap resample. Default is NULL, in which case these are defined internally.}
-
-\item{seed.boot}{Only used if Boot.inference is TRUE. Should a specific seed be used in the definition of the folds. Default value is NULL in which case no seed is imposed.}
-
-\item{LR}{Estimation on the original sample. Output of a call to \code{\link{Lorenz.GA}} or \code{\link{PLR.wrap}}.}
-
-\item{LR.boot}{Estimation on the bootstrap resamples. In the non-penalized case, it is the output of a call to \code{\link{Lorenz.boot}}. In the penalized case, it is a list of size length(h.grid), where each element is the output of a call to \code{\link{Lorenz.boot}} and uses a different value of the bandwidth.}
-
-\item{...}{Additional parameters corresponding to arguments passed in \code{\link{Lorenz.GA}}, \code{\link{Lorenz.SCADFABS}} or \code{\link{Lorenz.FABS}} depending on the argument chosen in penalty.}
+\item{...}{Additional parameters corresponding to arguments passed in \code{\link{Lorenz.GA}}, \code{\link{Lorenz.FABS}} or \code{\link{Lorenz.SCADFABS}}, depending on the argument chosen in \code{penalty}.}
 }
 \value{
-For the Non-penalized Lorenz Regression, a list with the following elements :
+An object of class \code{"LR"} for the non-penalized Lorenz regression or of class \code{"PLR"} for a penalized Lorenz regression.
+
+Several methods are available for both classes to facilitate model analysis.
+Use \code{\link[=summary.LR]{summary.LR}} or \code{\link[=summary.PLR]{summary.PLR}} to summarize the model fits.
+Extract the coefficients of the single-index model using \code{\link[=coef.LR]{coef.LR}} or \code{\link[=coef.PLR]{coef.PLR}}.
+Measures of explained inequality (Gini coefficient and Lorenz-\eqn{R^2}) are retrieved using \code{\link[=ineqExplained.LR]{ineqExplained.LR}} or \code{\link[=ineqExplained.PLR]{ineqExplained.PLR}}.
+Obtain predictions with \code{\link[=predict.LR]{predict.LR}} or \code{\link[=predict.PLR]{predict.PLR}}, and fitted values with \code{\link[=fitted.LR]{fitted.LR}} or \code{\link[=fitted.PLR]{fitted.PLR}}.
+For visual representations of explained inequality, use \code{\link[=autoplot.LR]{autoplot.LR}} and \code{\link[=plot.LR]{plot.LR}}, or \code{\link[=autoplot.PLR]{autoplot.PLR}} and \code{\link[=plot.PLR]{plot.PLR}}.
+
+The object of class \code{"LR"} is a list containing the following components:
 \describe{
-   \item{\code{theta}}{the estimated vector of parameters.}
-   \item{\code{pval.theta}}{Only returned if Boot.inference is TRUE. the pvalues associated to each element of the parameter vector.}
-   \item{\code{summary}}{a vector including the estimated explained Gini coefficient and the Lorenz-\eqn{R^2}.}
-   \item{\code{Gi.expl}}{the estimated explained Gini coefficient}
-   \item{\code{LR2}}{the Lorenz-\eqn{R^2} of the regression.}
-   \item{\code{MRS}}{the matrix of estimated marginal rates of substitution. More precisely, if we want the MRS of X1 (numerator) with respect to X2 (denominator),
-   we should look for row corresponding to X1 and column corresponding to X2.}
-   \item{\code{Fit}}{A data frame containing the response (first column) and the estimated index (second column).}
-   \item{\code{Gi.star}}{Only returned if Boot.inference is TRUE. A vector gathering the bootstrap estimators of the explained Gini coefficient.}
-   \item{\code{LR2.star}}{Only returned if Boot.inference is TRUE. A vector gathering the bootstrap estimators of the Lorenz-\eqn{R^2}.}
-   \item{\code{theta.star}}{Only returned if Boot.inference is TRUE. A matrix gathering the bootstrap estimators of theta (rows refer to bootstrap iterations and columns refer to the different coefficients)}.
+   \item{\code{theta}}{The estimated vector of parameters.}
+   \item{\code{Gi.expl}}{The estimated explained Gini coefficient.}
+   \item{\code{LR2}}{The Lorenz-\eqn{R^2} of the regression.}
 }
-For the Penalized Lorenz Regression, a list with the following elements.
+The object of class \code{"PLR"} is a list containing the following components:
 \describe{
-   \item{\code{path}}{a list where the different elements correspond to the values of h.grid. Each element is a matrix where the first line displays the path of regularization parameters. The second and third lines display the evolution of the Lorenz-\eqn{R^2} and explained Gini coefficient along that path. The next lines display the evolution of the scores of the methods chosen in sel.choice. The remaining lines display the evolution of the estimated parameter vector.}
-   \item{\code{theta}}{a matrix where the different lines correspond to the methods chosen in sel.choice. Each line provides the estimated vector of parameters at the optimal value of the regularization parameter.}
-   \item{\code{summary}}{a matrix where the different lines correspond to the methods chosen in sel.choice. Each line provides the estimated explained Gini coefficient, the Lorenz-\eqn{R^2}, the optimal lambda, the optimal bandwidth, the number of selected variables and the scores at the optimal value of the regularization parameter.}
-   \item{\code{Gi.expl}}{a vector providing the estimated explained Gini coefficient at the optimal value of the regularization parameter for each method in sel.choice.}
-   \item{\code{LR2}}{a vector providing the Lorenz-\eqn{R^2} at the optimal value of the regularization parameter for each method in sel.choice.}
-   \item{\code{MRS}}{a list where the different elements correspond to a method in sel.choice. Each element is a matrix of estimated marginal rates of substitution for non-zero coefficients at the optimal value of the regularization parameter.}
-   \item{\code{Fit}}{A data frame containing the response (first column). The remaining columns give the estimated index at the optimal value of the regularization parameter, for each method chosen in sel.choice.}
-   \item{\code{which.h}}{a vector providing the index of the optimal bandwidth for each method in sel.choice.}
-   \item{\code{which.lambda}}{a vector providing the index of the optimal lambda for each method in sel.choice.}
-   \item{\code{Gi.star}}{Only returned if Boot.inference is TRUE. A list (each element a different value of the bandwidth h) of lists (each element a different value of the penalty parameter) of vectors (each element a bootstrap iteration) gathering the bootstrap estimators of the explained Gini coefficient.}
-   \item{\code{LR2.star}}{Only returned if Boot.inference is TRUE. Similarly for the Lorenz-\eqn{R^2}}
-   \item{\code{theta.star}}{Only returned if Boot.inference is TRUE. A list (each element a different value of the bandwidth h) of lists (each element a different value of the penalty parameter) of matrices (rows are bootstrap iterations and columns refer to the coefficients) gathering the bootstrap estimators of theta.}
+   \item{\code{path}}{A list where the different elements correspond to the values of the grid parameter. Each element is a matrix where the first line displays the vector of lambda values. The second and third lines display the evolution of the Lorenz-\eqn{R^2} and explained Gini coefficient along that vector. The next lines display the evolution of the BIC score. The remaining lines display the evolution of the estimated coefficients of the single-index model.}
+   \item{\code{lambda.idx}}{the index of the optimal lambda obtained by the BIC method}
+   \item{\code{grid.idx}}{the index of the optimal grid parameter obtained by the BIC method.}
 }
-In both cases, the list also technical information, namely the formula, data, weights and call.
+In both cases, the list also provides technical information, such as the specified \code{formula}, \code{weights} and \code{call}, as well as the design matrix \code{x} and the response vector \code{y}.
 }
 \description{
-\code{Lorenz.Reg} performs the Lorenz regression of a response with respect to several covariates.
+\code{Lorenz.Reg} fits the Lorenz regression of a response with respect to several covariates.
+}
+\details{
+In the penalized case, the model is fitted for a grid of values of two parameters : the penalty parameter (lambda) and one tuning parameter specified by the arguments \code{grid.arg} and \code{grid.value}.
+The possibles values for \code{grid.arg} are tuning parameters of the functions \code{\link{Lorenz.FABS}} and \code{\link{Lorenz.SCADFABS}} : \code{''h''} (the default), \code{''SCAD.nfwd''},\code{''eps''}, \code{''kernel''}, \code{''a''} and \code{''gamma''}.
+The values for the grid are specified with \code{grid.value}. The default is \code{NULL}, in which case no grid is constructed
 }
 \section{References}{
 
 Heuchenne, C. and A. Jacquemain (2022). Inference for monotone single-index conditional means: A Lorenz regression approach. \emph{Computational Statistics & Data Analysis 167(C)}.
-Jacquemain, A., C. Heuchenne, and E. Pircalabelu (2022). A penalised bootstrap estimation procedure for the explained Gini coefficient.
+
+Jacquemain, A., C. Heuchenne, and E. Pircalabelu (2024). A penalised bootstrap estimation procedure for the explained Gini coefficient. \emph{Electronic Journal of Statistics 18(1) 247-300}.
 }
 
 \examples{
 data(Data.Incomes)
 set.seed(123)
-Data <- Data.Incomes[sample(1:nrow(Data.Incomes),50),]
+data <- Data.Incomes[sample(1:200,50),]
 # 1. Non-penalized regression
-NPLR <- Lorenz.Reg(Income ~ ., data = Data, penalty = "none",
-                   popSize = 30)
+NPLR <- Lorenz.Reg(Income ~ ., data = Data.Incomes, penalty = "none", popSize = 20)
 # 2. Penalized regression
-PLR <- Lorenz.Reg(Income ~ ., data = Data, penalty = "SCAD",
-                  h.grid = nrow(Data.Incomes)^(-1/5.5),
-                  sel.choice = c("BIC","CV"), eps = 0.01, nfolds = 5)
-# Comparison
-NPLR$theta;PLR$theta
-NPLR$summary;PLR$summary
+PLR <- Lorenz.Reg(Income ~ ., data = Data.Incomes, penalty = "SCAD",
+                  eps = 0.03, grid.arg = "h",
+                  grid.value=c(0.5,1,2)*nrow(Data.Incomes)^(-1/5.5))
+# Print method
+print(NPLR)
+print(PLR)
+# Summary method
+summary(NPLR)
+summary(PLR)
+# Coef method
+coef(NPLR)
+coef(PLR)
+# ineqExplained method
+ineqExplained(NPLR)
+ineqExplained(PLR)
+# Predict method
+## One can predict either the index or the response
+predict(NPLR,type="response")
+predict(PLR,type="response")
+# Plot method
+plot(NPLR)
+plot(PLR)
+## Traceplot of the penalized coefficients
+plot(PLR,type="traceplot")
 
 }
 \seealso{
-\code{\link{Lorenz.GA}}, \code{\link{Lorenz.SCADFABS}}, \code{\link{Lorenz.FABS}}, \code{\link{PLR.wrap}}, \code{\link{Lorenz.boot}}
+\code{\link{Lorenz.GA}}, \code{\link{Lorenz.SCADFABS}}, \code{\link{Lorenz.FABS}}, \code{\link{Lorenz.boot}}
 }

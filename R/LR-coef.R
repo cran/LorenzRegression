@@ -1,8 +1,9 @@
-#' Estimated coefficients for the Lorenz Regression
+#' Estimated coefficients for the Lorenz regression
 #'
-#' \code{coef.LR} provides the estimated coefficients for an object of class \code{LR}.
+#' Provides the estimated coefficients for an object of class \code{"LR"}.
 #'
-#' @param object Output of a call to \code{\link{Lorenz.Reg}}, where \code{penalty="none"}.
+#' @aliases coef.LR_boot
+#' @param object An object of S3 class \code{"LR"}.
 #' @param ... Additional arguments.
 #'
 #' @return a vector gathering the estimated coefficients
@@ -10,9 +11,7 @@
 #' @seealso \code{\link{Lorenz.Reg}}
 #'
 #' @examples
-#' data(Data.Incomes)
-#' NPLR <- Lorenz.Reg(Income ~ ., data = Data.Incomes, penalty = "none")
-#' coef(NPLR)
+#' ## For examples see example(Lorenz.Reg)
 #'
 #' @method coef LR
 #' @export
@@ -22,3 +21,11 @@ coef.LR <- function(object, ...){
   object$theta
 
 }
+
+#' @method coef LR_boot
+#' @export
+
+coef.LR_boot <- function(object, ...){
+  NextMethod("coef")
+}
+

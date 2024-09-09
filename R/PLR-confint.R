@@ -1,74 +1,86 @@
-#' Confidence intervals for the Penalized Lorenz Regression
+#' Confidence intervals for the penalized Lorenz regression
 #'
-#' \code{confint.PLR} provides confidence intervals for the explained Gini coefficient and Lorenz-R2 for an parm of class \code{PLR}.
+#' Provides bootstrap confidence intervals for the explained Gini coefficient and Lorenz-\eqn{R^2} for an object of class \code{"PLR_boot"}.
 #'
-#' @param object Output of a call to \code{\link{Lorenz.Reg}}, where \code{penalty!="none"} and \code{Boot.inference=TRUE}.
-#' @param parm Determines whether the confidence interval is computed for the explained Gini coefficient or for the Lorenz-R2. Possible values are "Gini" (default, for the explained Gini) and "LR2" (for the Lorenz-R2).
-#' @param level level of the confidence interval
-#' @param boot.method What bootstrap method is used to construct the confidence interval. Default value is "Param", which exploits the asymptotic normality and only bootstraps the variance.
-#' Other possible values are "Perc" (percentile bootstrap) and "Basic" (basic bootstrap). Percentile bootstrap directly plugs the quantiles of the bootstrap distribution.
-#' Basic bootstrap is based on bootstrapping the whole distribution of the estimator.
-#' @param which.pars Which values of the bandwidth h and the penalty parameter lambda should be used. Default is NULL, in which case the optimal values are used.
+#' @aliases confint.PLR confint.PLR_cv
+#' @param object An object of class \code{"PLR_boot"}. The object might also have S3 class \code{"PLR_cv"}. The current implementation requires bootstrap to construct confidence intervals. Hence, it is not sufficient that \code{object} inherits from \code{"PLR"}.
+#' @param parm A character string determining whether the confidence interval is computed for the explained Gini coefficient or for the Lorenz-\eqn{R^2}. Possible values are \code{"Gini"} (default, for the explained Gini) and \code{"LR2"} (for the Lorenz-\eqn{R^2})
+#' @param level A numeric giving the level of the confidence interval. Default value is 0.95.
+#' @param type A character string specifying the bootstrap method. Possible values are \code{"norm"}, \code{"basic"} and \code{"perc"}. For more information, see the argument \code{type} of the function \code{\link[boot]{boot.ci}} from the \emph{boot} library.
+#' @param pars.idx What grid and penalty parameters should be used for parameter selection. Either a character string specifying the selection method, where the possible values are:
+#' \itemize{
+#'    \item \code{"BIC"} (default).
+#'    \item \code{"Boot"}.
+#'    \item \code{"CV"} - Available if \code{object} inherits from \code{"PLR_cv"}.
+#' }
+#' Or a numeric vector of length 2, where the first element is the index of the grid parameter and the second is the index of the penalty parameter.
+#' @param bias.corr A logical determining whether bias correction should be performed. Only used if \code{type="norm"}. Default is \code{TRUE}.
 #' @param ... Additional arguments.
 #'
-#' @return A matrix gathering the desired confidence intervals. Each row corresponds to a different selection method for the pair (h,lambda).
+#' @return A vector providing the desired confidence interval.
 #'
-#' @details Use this function only if Boot.inference was set to TRUE in the call to \code{\link{Lorenz.Reg}}. Otherwise, bootstrap was not computed and the confidence intervals cannot be determined.
-#'
-#' @seealso \code{\link{Lorenz.Reg}}
+#' @seealso \code{\link{Lorenz.boot}}, \code{\link[boot]{boot.ci}}
 #'
 #' @examples
-#' data(Data.Incomes)
-#' set.seed(123)
-#' Data <- Data.Incomes[sample(1:nrow(Data.Incomes),50),]
-#' PLR <- Lorenz.Reg(Income ~ ., data = Data, h.grid = nrow(Data)^(-1/5.5),
-#'                   penalty = "SCAD", eps = 0.02, seed.boot = 123, B = 40, Boot.inference = TRUE)
-#' confint(PLR)
+#' ## For examples see example(Lorenz.boot)
 #'
+#' @method confint PLR_boot
+#' @export
+
+confint.PLR_boot <- function(object, parm=c("Gini","LR2"), level=0.95, type=c("norm","basic","perc"), pars.idx = "BIC", bias.corr = TRUE, ...){
+
+  parm <- match.arg(parm)
+  type <- match.arg(type)
+
+  if((is.numeric(pars.idx) & length(pars.idx)==2)){
+    lth1 <- length(object$path)
+    lth2 <- ncol(object$path[[lth1]])
+    if(pars.idx[1] > lth1 | pars.idx[2] > lth2) stop("Indices in pars.idx are out of bounds.")
+  }else if(pars.idx == "BIC"){
+    pars.idx <- c(object$grid.idx["BIC"],object$lambda.idx["BIC"])
+  }else if(pars.idx == "Boot"){
+    pars.idx <- c(object$grid.idx["Boot"],object$lambda.idx["Boot"])
+  }else if(pars.idx == "CV"){
+    stop("object is not of class 'PLR_cv'. Therefore pars.idx cannot be set to 'CV'.")
+  }else{
+    stop("pars.idx does not have the correct format")
+  }
+
+  ci_boot_PLR(object, pars.idx, parm, level, type, bias.corr)
+
+}
+
+#' @method confint PLR_cv
+#' @export
+
+confint.PLR_cv <- function(object, parm=c("Gini","LR2"), level=0.95, type=c("norm","basic","perc"), pars.idx = "BIC", bias.corr = TRUE, ...){
+
+  if(all(pars.idx == "CV")) pars.idx <- c(object$grid.idx["CV"],object$lambda.idx["CV"])
+  NextMethod("confint")
+
+}
+
 #' @method confint PLR
 #' @export
 
-confint.PLR <- function(object, parm=c("Gini","LR2"), level = 0.95, boot.method=c("Param","Basic","Perc"), which.pars = NULL, ...){
+confint.PLR <- function(object, parm=c("Gini","LR2"), level=0.95, pars.idx = "BIC", ...){
 
-  PLR <- object
-  parm <- match.arg(parm)
-  boot.method <- match.arg(boot.method)
-  alpha <- 1-level
+  stop("The 'confint' method requires the object to inherit from 'PLR_boot'. The current implementation of the penalized Lorenz regression uses bootstrap for confidence interval construction. Please ensure the object is generated using bootstrap (i.e., it should be of class 'PLR_boot').")
 
-  if(length(grep(".star",names(PLR))) > 0){
+}
 
-    if(is.null(which.pars)){
-      which.h <- PLR$which.h
-      which.lambda <- PLR$which.lambda
-    }else{
-      if(length(which.pars)!=2) stop("which.pars must either be NULL or a vector of size 2 where the first element is the index of the bandwidth and the second the index of lambda in the path.")
-      which.h <- which.pars[1]
-      which.lambda <- which.pars[2]
-    }
-
-    CI <- matrix(nrow = length(which.h), ncol = 2)
-    colnames(CI) <- c("Lower bound", "Upper bound")
-    if(is.null(which.pars)) rownames(CI) <- names(PLR$which.h)
-
-    for (k in 1:length(which.h)){
-
-      which.h.k <- which.h[k]
-      which.lambda.k <- which.lambda[k]
-
-      if(parm == "Gini") CI.k <- boot.confint(PLR$path[[which.h.k]]["Explained Gini",which.lambda.k],
-                                              PLR$Gi.star[[which.h.k]][[which.lambda.k]],
-                                              alpha, boot.method)
-      if(parm == "LR2") CI.k <- boot.confint(PLR$path[[which.h.k]]["Lorenz-R2",which.lambda.k],
-                                             PLR$LR2.star[[which.h.k]][[which.lambda.k]],
-                                             alpha, boot.method)
-      CI[k,] <- CI.k
-
-    }
-
-    return(CI)
-
-  }else{
-    stop("The input must contain a bootstrap estimation. Consider turning the Boot.inference argument in the Lorenz.Reg function to TRUE")
-  }
-
+ci_boot_PLR <- function(object, pars.idx, parm, level, type, bias.corr){
+  type2 <- switch(type, "basic" = "basic", "norm" = "normal", "perc" = "percent")
+  path.sizes <- sapply(object$path,ncol)
+  path.size <- sum(path.sizes)
+  lth.path <- length(path.sizes)
+  idx <- lapply(1:lth.path,function(i)(cumsum(path.sizes)-path.sizes+1)[i]:cumsum(path.sizes)[i])
+  i <- idx[[pars.idx[1]]][pars.idx[2]]
+  if(parm == "LR2") i <- i + path.size
+  ci <- boot.ci(object$boot_out, conf = level, type = type, index = i)
+  ci <- ci[[type2]]
+  ci <- ci[length(ci)-c(1,0)]
+  if(!bias.corr & type=="norm") ci <- ci - mean(ci) + object$boot_out$t0[i]
+  names(ci) <- paste0((c(0,level)+(1-level)/2)*100," %")
+  return(ci)
 }

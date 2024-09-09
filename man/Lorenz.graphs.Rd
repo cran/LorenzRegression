@@ -4,14 +4,16 @@
 \alias{Lorenz.graphs}
 \title{Graphs of concentration curves}
 \usage{
-Lorenz.graphs(formula, data, ...)
+Lorenz.graphs(formula, data, difference = FALSE, ...)
 }
 \arguments{
 \item{formula}{A formula object of the form \emph{response} ~ \emph{other_variables}.}
 
 \item{data}{A dataframe containing the variables of interest}
 
-\item{...}{other arguments (see Section 'Arguments' in \code{\link{Lorenz.curve}}).}
+\item{difference}{A logical determining whether the vertical axis should be expressed in terms of deviation from perfect equality. Default is \code{FALSE}.}
+
+\item{...}{Further arguments (see Section 'Arguments' in \code{\link{Lorenz.curve}}).}
 }
 \value{
 A plot comprising
@@ -26,6 +28,8 @@ A plot comprising
 \examples{
 data(Data.Incomes)
 Lorenz.graphs(Income ~ Age + Work.Hours, data = Data.Incomes)
+# Expressing now the vertical axis as the deviation from perfect equality
+Lorenz.graphs(Income ~ Age + Work.Hours, data = Data.Incomes, difference = TRUE)
 
 }
 \seealso{

@@ -2,73 +2,61 @@
 % Please edit documentation in R/PLR-CV.R
 \name{PLR.CV}
 \alias{PLR.CV}
-\title{Determines the regularization parameter (lambda) in a PLR via cross-validation}
+\title{Cross-validation for penalized Lorenz regression}
 \usage{
-PLR.CV(
-  formula,
-  data,
-  penalty = "SCAD",
-  h,
-  PLR.est = NULL,
-  standardize = TRUE,
-  weights = NULL,
-  eps,
-  nfolds = 10,
-  foldID = NULL,
-  seed.CV = NULL,
-  parallel = FALSE,
-  ...
-)
+PLR.CV(object, k, data.orig, seed.CV = NULL, parallel = FALSE, ...)
 }
 \arguments{
-\item{formula}{A formula object of the form \emph{response} ~ \emph{other_variables}.}
+\item{object}{An object with S3 class \code{"PLR"}, i.e. the return of a call to the \code{\link{Lorenz.Reg}} function where \code{penalty=="SCAD"} or \code{penalty=="LASSO"}.}
 
-\item{data}{A data frame containing the variables displayed in the formula.}
+\item{k}{An integer indicating the number of folds in the k-fold cross-validation}
 
-\item{penalty}{penalty used in the Penalized Lorenz Regression. Possible values are "SCAD" (default) or "LASSO".}
+\item{data.orig}{A data frame corresponding to the original dataset, used in the \code{\link{Lorenz.Reg}} call.}
 
-\item{h}{bandwidth of the kernel, determining the smoothness of the approximation of the indicator function.}
+\item{seed.CV}{An optional seed that is used internally for the creation of the folds. Default is \code{NULL}, in which case no seed is imposed.}
 
-\item{PLR.est}{Output of a call to \code{\link{PLR.wrap}} corresponding to the estimation of the Penalized Lorenz Regression on the full sample. Default value is NULL in which case the estimation on the full sample is run internally.}
+\item{parallel}{Whether parallel computing should be used to distribute the cross-validation computations. Either a logical value determining whether parallel computing is used (TRUE) or not (FALSE, the default value). Or a numerical value determining the number of cores to use.}
 
-\item{standardize}{Should the variables be standardized before the estimation process? Default value is TRUE.}
-
-\item{weights}{vector of sample weights. By default, each observation is given the same weight.}
-
-\item{eps}{Step size in the FABS or SCADFABS algorithm. Default value is 0.005.}
-
-\item{nfolds}{Number of folds. Default value is 10.}
-
-\item{foldID}{vector taking value from 1 to nfolds specifying the fold index of each observation. Default value is NULL in which case the folds are defined internally.}
-
-\item{seed.CV}{Should a specific seed be used in the definition of the folds. Default value is NULL in which case no seed is imposed.}
-
-\item{parallel}{Whether parallel computing should be used to distribute the \code{nfolds} computations on different CPUs. Either a logical value determining whether parallel computing is used (TRUE) or not (FALSE, the default value). Or a numerical value determining the number of cores to use.}
-
-\item{...}{Additional parameters corresponding to arguments passed in \code{\link{Lorenz.SCADFABS}} or \code{\link{Lorenz.FABS}} depending on the argument chosen in penalty.}
+\item{...}{Additional parameters corresponding to arguments passed to the function \code{\link[rsample]{vfold_cv}} from the \emph{rsample} library.}
 }
 \value{
-A list with two components
+An object of class \code{c("PLR_cv", "PLR")}. The object is a list containing the following components:
 \describe{
-   \item{\code{val}}{vector indicating the CV-score for each value of lambda.}
-   \item{\code{best}}{index where the optimum is attained.}
+   \item{\code{path}}{See the \code{\link{Lorenz.Reg}} function for the documentation of the original path. To this path is added the CV-score.}
+   \item{\code{lambda.idx}}{A vector indicating the index of the optimal lambda obtained by each selection method.}
+   \item{\code{grid.idx}}{A vector indicating the index of the optimal grid parameter obtained by each selection method.}
 }
+Note: The returned object may have additional classes such as \code{"PLR_boot"} if bootstrap was performed.
 }
 \description{
-\code{PLR.CV} undertakes k-fold cross-validation for a Penalized Lorenz Regression. It returns the CV-score associated to each value of the regularization parameter and the index of the optimum.
+\code{PLR.CV} selects the grid and penalization parameters of the penalized Lorenz regression by cross-validation.
+}
+\details{
+The parameter \code{seed.CV} allows for local seed setting to control randomness in the generation of the folds.
+The specified seed is applied to the respective part of the computation, and the seed is reverted to its previous state after the operation.
+This ensures that the seed settings do not interfere with the global random state or other parts of the code.
 }
 \section{References}{
 
-Jacquemain, A., C. Heuchenne, and E. Pircalabelu (2022). A penalised bootstrap estimation procedure for the explained Gini coefficient.
+Jacquemain, A., C. Heuchenne, and E. Pircalabelu (2024). A penalised bootstrap estimation procedure for the explained Gini coefficient. \emph{Electronic Journal of Statistics 18(1) 247-300}.
 }
 
 \examples{
-YX_mat <- Data.Incomes[,-2]
-PLR <- PLR.wrap(YX_mat, h = nrow(YX_mat)^(-1/5.5), eps=0.01)
-PLR.CV(Income ~ ., Data.Incomes, PLR.est = PLR,
-       h = nrow(Data.Incomes)^(-1/5.5), eps = 0.01, nfolds = 5)
+\dontshow{
+utils::example(Lorenz.Reg, echo = FALSE)
+}
+# Continuing the  Lorenz.Reg(.) example:
+PLR_CV <- PLR.CV(PLR, k = 5, data.orig = data, seed.CV = 123)
+# The object now inherits from the class "PLR_CV".
+# Hence the methods (also) display the results obtained by cross-validation.
+print(PLR_CV)
+summary(PLR_CV)
+coef(PLR_CV, pars.idx = "CV")
+predict(PLR_CV, pars.idx = "CV")
+plot(PLR_CV)
+plot(PLR_CV, type = "diagnostic") # Plot of the scores depending on the grid and penalty parameters
 
 }
 \seealso{
-\code{\link{Lorenz.Reg}}, \code{\link{PLR.wrap}}, \code{\link{Lorenz.FABS}}, \code{\link{Lorenz.SCADFABS}}
+\code{\link{Lorenz.Reg}}, \code{\link{Lorenz.SCADFABS}}, \code{\link{Lorenz.FABS}}, \code{\link{Lorenz.boot}}
 }

@@ -1,48 +1,82 @@
-#' Estimated coefficients for the Penalized Lorenz Regression
+#' Estimated coefficients for the penalized Lorenz regression
 #'
-#' \code{coef.PLR} provides the estimated coefficients for an object of class \code{PLR}.
+#' Provides the estimated coefficients for an object of class \code{"PLR"}.
 #'
-#' @param object Output of a call to \code{\link{Lorenz.Reg}}, where \code{penalty!="none"}.
-#' @param renormalize whether the coefficient vector should be re-normalized to match the representation where the first category of each categorical variable is omitted. Default value is TRUE
+#' @aliases coef.PLR_boot coef.PLR_cv
+#' @param object An object of S3 class \code{"PLR"}. The object might also have S3 classes \code{"PLR_boot"} and/or \code{"PLR_cv"} (both inherit from class \code{"PLR"})
+#' @param renormalize A logical value determining whether the coefficient vector should be re-normalized to match the representation where the first category of each categorical variable is omitted. Default value is TRUE
+#' @param pars.idx What grid and penalty parameters should be used for parameter selection. Either a character string specifying the selection method, where the possible values are:
+#' \itemize{
+#'    \item \code{"BIC"} (default) - Always available.
+#'    \item \code{"Boot"} - Available if \code{object} inherits from \code{"PLR_boot"}.
+#'    \item \code{"CV"} - Available if \code{object} inherits from \code{"PLR_cv"}.
+#' }
+#' Or a numeric vector of length 2, where the first element is the index of the grid parameter and the second is the index of the penalty parameter.
 #' @param ... Additional arguments
 #'
-#' @return If the PLR was fitted with only one selection method, the output is a vector gathering the estimated coefficients.
-#' If several selection methods were selected, it outputs a list of vectors, where each element of the list corresponds to a different selection method.
+#' @return a vector gathering the estimated coefficients.
 #'
 #' @seealso \code{\link{Lorenz.Reg}}
 #'
 #' @examples
-#' data(Data.Incomes)
-#' PLR <- Lorenz.Reg(Income ~ ., data = Data.Incomes, penalty = "SCAD",
-#'                   h.grid = nrow(Data.Incomes)^(-1/5.5), sel.choice = c("BIC","CV"),
-#'                   eps = 0.01, seed.CV = 123, nfolds = 5)
-#' coef(PLR)
+#' ## For examples see example(Lorenz.Reg), example(Lorenz.boot) and example(PLR.CV)
 #'
 #' @method coef PLR
 #' @export
 
-coef.PLR <- function(object, renormalize=TRUE, ...){
+coef.PLR <- function(object, renormalize=TRUE, pars.idx="BIC", ...){
 
-  PLR <- object
+  if((is.numeric(pars.idx) & length(pars.idx)==2)){
+    lth1 <- length(object$path)
+    lth2 <- ncol(object$path[[lth1]])
+    if(pars.idx[1] > lth1 | pars.idx[2] > lth2) stop("Indices in pars.idx are out of bounds.")
+  }else if(pars.idx == "BIC"){
+    pars.idx <- c(object$grid.idx["BIC"],object$lambda.idx["BIC"])
+  }else if(pars.idx == "Boot"){
+    stop("object is not of class 'PLR_boot'. Therefore pars.idx cannot be set to 'Boot'.")
+  }else if(pars.idx == "CV"){
+    stop("object is not of class 'PLR_cv'. Therefore pars.idx cannot be set to 'CV'.")
+  }else{
+    stop("pars.idx does not have the correct format")
+  }
+
+  coef_PLR(object, renormalize, pars.idx)
+
+}
+
+#' @method coef PLR_boot
+#' @export
+
+coef.PLR_boot <- function(object, renormalize=TRUE, pars.idx="BIC", ...){
+
+  if(all(pars.idx == "Boot")) pars.idx <- c(object$grid.idx["Boot"],object$lambda.idx["Boot"])
+  NextMethod("coef")
+
+}
+
+#' @method coef PLR_cv
+#' @export
+
+coef.PLR_cv <- function(object, renormalize=TRUE, pars.idx="BIC", ...){
+
+  if(all(pars.idx == "CV")) pars.idx <- c(object$grid.idx["CV"],object$lambda.idx["CV"])
+  NextMethod("coef")
+
+}
+
+
+coef_PLR <- function(object, renormalize, pars.idx){
+
+  l <- ncol(object$x)
+  pth <- object$path[[pars.idx[1]]][,pars.idx[2]]
+  object$theta <- pth[(length(pth)-l+1):length(pth)]
+
   if(renormalize){
-    m1 <- PLR.normalize(PLR)
+    m1 <- PLR.normalize(object)
   }else{
-    m1 <- PLR$theta
+    m1 <- object$theta
   }
 
-  if(nrow(m1) > 1){
-
-    m2 <- t(m1)
-    l <- split(m2,rep(1:ncol(m2), each = nrow(m2)))
-    names(l) <- rownames(PLR$theta)
-    for (j in 1:length(l)) names(l[[j]]) <- rownames(m2)
-
-    return(l)
-
-  }else{
-
-    return(m1[1,])
-
-  }
+  m1
 
 }

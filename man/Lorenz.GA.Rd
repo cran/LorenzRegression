@@ -5,22 +5,29 @@
 \title{Estimates the parameter vector in Lorenz regression using a genetic algorithm}
 \usage{
 Lorenz.GA(
-  YX_mat,
+  y,
+  x,
   standardize = TRUE,
+  weights = NULL,
   popSize = 50,
   maxiter = 1500,
   run = 150,
   ties.method = c("random", "mean"),
   ties.Gini = c("random", "mean"),
   seed.random = NULL,
-  weights = NULL,
-  parallel = FALSE
+  seed.Gini = NULL,
+  seed.GA = NULL,
+  parallel.GA = FALSE
 )
 }
 \arguments{
-\item{YX_mat}{A matrix with the first column corresponding to the response vector, the remaining ones being the explanatory variables.}
+\item{y}{a vector of responses}
+
+\item{x}{a matrix of explanatory variables}
 
 \item{standardize}{Should the variables be standardized before the estimation process? Default value is TRUE.}
+
+\item{weights}{vector of sample weights. By default, each observation is given the same weight.}
 
 \item{popSize}{Size of the population of candidates in the genetic algorithm. Default value is 50.}
 
@@ -32,11 +39,13 @@ Lorenz.GA(
 
 \item{ties.Gini}{what method should be used to break the ties in the computation of the Gini coefficient at the end of the algorithm. Possible values and default choice are the same as above.}
 
-\item{seed.random}{seed.random imposed for the generation of the vector of uniform random variables used to break the ties. Default is NULL, in which case no seed.random is imposed.}
+\item{seed.random}{An optional seed for generating the vector of uniform random variables used to break ties in the genetic algorithm. Defaults to \code{NULL}, which means no specific seed is set.}
 
-\item{weights}{vector of sample weights. By default, each observation is given the same weight.}
+\item{seed.Gini}{An optional seed for generating the vector of uniform random variables used to break ties in the computation of the Gini coefficient. Defaults to \code{NULL}, meaning no specific seed is applied.}
 
-\item{parallel}{Whether parallel computing should be used to distribute the computations in the genetic algorithm. Either a logical value determining whether parallel computing is used (TRUE) or not (FALSE, the default value). Or a numerical value determining the number of cores to use.}
+\item{seed.GA}{An optional seed for \code{\link[GA]{ga}}, used during the fitting of the genetic algorithm. Defaults to \code{NULL}, implying that no specific seed is set.}
+
+\item{parallel.GA}{Whether parallel computing should be used to distribute the computations in the genetic algorithm. Either a logical value determining whether parallel computing is used (TRUE) or not (FALSE, the default value). Or a numerical value determining the number of cores to use.}
 }
 \value{
 A list with several components:
@@ -49,12 +58,16 @@ A list with several components:
 }
 }
 \description{
-\code{Lorenz.GA} estimates the vector of parameters in Lorenz regression using the unit-norm normalization
+\code{Lorenz.GA} estimates the coefficient vector of the single-index model.
 It also returns the Lorenz-\eqn{R^2} of the regression as well as the estimated explained Gini coefficient.
 }
 \details{
 The genetic algorithm is solved using function \code{\link[GA]{ga}} from the \emph{GA} package. The fitness function is coded in Rcpp to speed up computation time.
-When discrete covariates are introduced and ties occur in the index, the default option randomly breaks them, as advised in Section 3 of Heuchenne and Jacquemain (2020)
+When discrete covariates are introduced and ties occur in the index, the default option randomly breaks them, as advised in Section 3 of Heuchenne and Jacquemain (2022)
+
+The parameters \code{seed.random}, \code{seed.Gini}, and \code{seed.GA} allow for local seed setting to control randomness in specific parts of the function.
+Each seed is applied to the respective part of the computation, and the seed is reverted to its previous state after the operation.
+This ensures that the seed settings do not interfere with the global random state or other parts of the code.
 }
 \section{References}{
 
@@ -63,8 +76,9 @@ Heuchenne, C. and A. Jacquemain (2022). Inference for monotone single-index cond
 
 \examples{
 data(Data.Incomes)
-YX_mat <- cbind(Data.Incomes$Income, Data.Incomes$Age, Data.Incomes$Work.Hours)
-Lorenz.GA(YX_mat, popSize = 40)
+y <- Data.Incomes$Income
+x <- cbind(Data.Incomes$Age, Data.Incomes$Work.Hours)
+Lorenz.GA(y, x, popSize = 40)
 
 }
 \seealso{
