@@ -37,8 +37,6 @@ Gini.coef <- function(y, x=y, na.rm=TRUE, ties.method=c("mean","random"), seed=N
 
   ties.method <- match.arg(ties.method)
 
-  n <- length(y)
-
   if(sum(is.na(c(x,y)))>0){
     if(na.rm){
      x.tmp <- x[!(is.na(x) | is.na(y))]
@@ -49,6 +47,9 @@ Gini.coef <- function(y, x=y, na.rm=TRUE, ties.method=c("mean","random"), seed=N
       stop("There are missing values in either x or y and na.rm is FALSE")
     }
   }
+
+  n <- length(y)
+  if (n < 1) stop("'y' must have 1 or more non-missing values")
 
   if(any(weights<0)) stop("Weights must be nonnegative")
 
@@ -69,12 +70,8 @@ Gini.coef <- function(y, x=y, na.rm=TRUE, ties.method=c("mean","random"), seed=N
 
   if (ties.method == "mean"){
 
-    x_k <- sort(unique(x))
-    pi_k <- sapply(1:length(x_k),function(k)sum(pi[x==x_k[k]]))
-    F_k <- cumsum(pi_k) - 0.5*pi_k
-    F_i <- sapply(1:length(x),function(i)sum(F_k[x_k==x[i]])) # Ensures that sum(F_i*pi) = 0.5
+    F_i <- .frac_rank_cpp(x, pi)
     y_mean <- pi%*%y
-
   }
 
   Gini <- 2*((pi*y)%*%F_i)/y_mean - 1

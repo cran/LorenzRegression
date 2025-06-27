@@ -20,15 +20,33 @@
     .Call('_LorenzRegression_Fitness_meanrank', PACKAGE = 'LorenzRegression', x, Y, X, pi, tolerance)
 }
 
-.PLR_derivative_cpp <- function(y, X, pi, theta, h, gamma, kernel) {
-    .Call('_LorenzRegression_PLR_derivative_cpp', PACKAGE = 'LorenzRegression', y, X, pi, theta, h, gamma, kernel)
+.PLR_derivative_cpp_m <- function(derz, y, ycum, y_skipped, X, pi, theta, h, gamma, kernel) {
+    .Call('_LorenzRegression_PLR_derivative_cpp_m', PACKAGE = 'LorenzRegression', derz, y, ycum, y_skipped, X, pi, theta, h, gamma, kernel)
 }
 
-.PLR_loss_cpp <- function(X, y, pi, theta, h, gamma, kernel) {
-    .Call('_LorenzRegression_PLR_loss_cpp', PACKAGE = 'LorenzRegression', X, y, pi, theta, h, gamma, kernel)
+.PLR_derivative_cpp_zero <- function(y, ycum, X, pi, theta, h, gamma, kernel) {
+    .Call('_LorenzRegression_PLR_derivative_cpp_zero', PACKAGE = 'LorenzRegression', y, ycum, X, pi, theta, h, gamma, kernel)
+}
+
+.PLR_loss_cpp_m <- function(lossz, X, y, ycum, y_skipped, pi, theta, h, gamma, kernel) {
+    .Call('_LorenzRegression_PLR_loss_cpp_m', PACKAGE = 'LorenzRegression', lossz, X, y, ycum, y_skipped, pi, theta, h, gamma, kernel)
+}
+
+.PLR_loss_cpp_zero <- function(X, y, ycum, pi, h, gamma, kernel) {
+    .Call('_LorenzRegression_PLR_loss_cpp_zero', PACKAGE = 'LorenzRegression', X, y, ycum, pi, h, gamma, kernel)
 }
 
 .SCAD_derivative_cpp <- function(x, lambda, a) {
     .Call('_LorenzRegression_SCAD_derivative_cpp', PACKAGE = 'LorenzRegression', x, lambda, a)
+}
+
+#' @title Computes fractional ranks
+#' @description Computes the vector of fractional ranks related to a given vector
+#' @param x vector of size n gathering the values for which the fractional rank should be computed
+#' @param pi vector of size n gathering the observation weights (notice that sum(pi)=1)
+#' @return Fractional rank related to vector x
+#' @keywords internal
+.frac_rank_cpp <- function(x, pi) {
+    .Call('_LorenzRegression_frac_rank_cpp', PACKAGE = 'LorenzRegression', x, pi)
 }
 
