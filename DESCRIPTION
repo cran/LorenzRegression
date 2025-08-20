@@ -1,7 +1,7 @@
 Package: LorenzRegression
 Type: Package
 Title: Lorenz and Penalized Lorenz Regressions
-Version: 2.2.0
+Version: 2.3.0
 Authors@R: c(person("Alexandre","Jacquemain",email="aljacquemain@gmail.com",role=c("aut","cre"),comment = c(ORCID = "0000-0001-9349-780X")),
              person("Xingjie","Shi",email="xingjieshi@njue.edu.cn",role="ctb",
              comment="Author of an R implementation of the FABS algorithm available at https://github.com/shuanggema/Fabs, of which function Lorenz.FABS is derived"))
@@ -19,7 +19,7 @@ URL: https://github.com/AlJacq/LorenzRegression
 BugReports: https://github.com/AlJacq/LorenzRegression/issues
 ByteCompile: true
 NeedsCompilation: yes
-Packaged: 2025-06-27 06:52:39 UTC; Jacquemain
+Packaged: 2025-08-20 09:27:06 UTC; Jacquemain
 Author: Alexandre Jacquemain [aut, cre] (ORCID:
     <https://orcid.org/0000-0001-9349-780X>),
   Xingjie Shi [ctb] (Author of an R implementation of the FABS algorithm
@@ -27,4 +27,4 @@ Author: Alexandre Jacquemain [aut, cre] (ORCID:
     Lorenz.FABS is derived)
 Maintainer: Alexandre Jacquemain <aljacquemain@gmail.com>
 Repository: CRAN
-Date/Publication: 2025-06-27 07:30:12 UTC
+Date/Publication: 2025-08-20 10:10:02 UTC
