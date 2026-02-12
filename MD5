@@ -1,6 +1,6 @@
-c17a7dbf16eab0b20416d8eebdee1b05 *DESCRIPTION
+b2562d6e811526cf6d70f4c17dd89935 *DESCRIPTION
 68cc74b40d3b610fec7ac4861958c3de *NAMESPACE
-6fb83892068abf84c5314657c6c69110 *NEWS.md
+efca07f717e7abad459978d2097a3f87 *NEWS.md
 62ed9734db92e36052da6fd03524fc17 *R/Data-Incomes.R
 223fef60375ec7d382dbccbc6eba37b0 *R/FABS-estimation.R
 256dc65fbfee3a48de1c82340de10c1b *R/GA-call.R
@@ -21,7 +21,7 @@ cd894e0fc884413928ba4dd66ca2b79d *R/LR-summary.R
 f1016da7797324029806b897d73743c9 *R/Lorenz-curve.R
 ac970235573d0a83be1bbf45f2b8587e *R/Lorenz-graphs.R
 34afff8a400940df9691815168e7b270 *R/Lorenz-regression.R
-45213e9b2eaf1b5544ab36e7e6313ff9 *R/LorenzRegression-package.R
+eb0670d1ed38f79693dc0a379f544ad2 *R/LorenzRegression-package.R
 38d527ae4325fb4437924ac14b131aad *R/PLR-BIC.R
 20b5ef3aa757773904638867fcc6c884 *R/PLR-CV.R
 e794574696288d84ad6a7353014bc91d *R/PLR-coef.R
@@ -59,7 +59,7 @@ b0a502fbb7e2f8d6879cc98fa7876478 *man/Lorenz.boot.combine.Rd
 995f51fe8d13dd518a390a9aea678049 *man/Lorenz.curve.Rd
 4dddfb39da93ecf9e415202e8199f83d *man/Lorenz.ga.call.Rd
 b6c7c063698ffa2b6c7461bea80ca470 *man/Lorenz.graphs.Rd
-a9c7f96e03c93e92913a720e4f0d5a30 *man/LorenzRegression-package.Rd
+1d8b2a606c85f9e0c867db2ac2ed8000 *man/LorenzRegression-package.Rd
 05872fb085162bb46ff8527d53925cb1 *man/PLR.BIC.Rd
 b168a660708bec679f6b3f62c881fc56 *man/PLR.CV.Rd
 5dd3631f7b8631ff2456f2a7add348ac *man/PLR.fit.Rd
